@@ -1,48 +1,40 @@
 ---
 # yaml-language-server: $schema=https://schema.blue-build.org/recipe-v1.json
-# la imagen se publicará en ghcr.io/<user>/<name>
 name: bogdandabeast-custom-os
-# descripción que se incluirá en los metadatos de la imagen
 description: Mi sistema de trabajo
-
-# la base de la imagen sobre la que se construirá (FROM) y el tag de versión a usar
 base-image: ghcr.io/ublue-os/bluefin:latest
-image-version: latest # también se soporta "latest" para recibir actualizaciones constantes
+image-version: latest
 
-# configuración de módulos, ejecutados en orden
-# puedes incluir múltiples instancias del mismo módulo
 modules:
   - type: files
     files:
       - source: system
-        destination: / # copia todo lo que esté en files/system/* en la raíz de la imagen
+        destination: /       # Copia todo lo que esté en 'system' a la raíz de la imagen
 
   - type: rpm-ostree
     repos:
-      - https://copr.fedorainfracloud.org/coprs/atim/starship/repo/fedora-%OS_VERSION%/atim-starship-fedora-%OS_VERSION%.repo
+      - https://copr.fedorainfracloud.org/coprs/atim/starship/repo/fedora-41/atim-starship-fedora-41.repo
     install:
       - micro
       - starship
     remove:
-      # ejemplo: remover Firefox (se usará flatpak en su lugar)
       - firefox
       - firefox-langpacks
 
   - type: default-flatpaks
-    notify: true # Notifica cuando se finaliza la instalación o desinstalación (true/false)
+    notify: true
     system:
-      # Si no se especifica información del repositorio, se usará Flathub por defecto
       install:
         - org.mozilla.firefox
         - org.gnome.Loupe
       remove:
         - org.gnome.eog
-    user: {} # Agrega también el repo de Flathub para usuario, aunque no instale nada a nivel usuario
+    user: {}
 
-  # Módulo añadido para reemplazar el kernel por defecto por el kernel CachyOS
+  # Módulo para reemplazar el kernel por defecto por el kernel CachyOS
   - type: rpm-ostree
     repos:
-      - https://copr.fedorainfracloud.org/coprs/bieszczaders/kernel-cachyos/repo/fedora-%OS_VERSION%/kernel-cachyos-fedora-%OS_VERSION%.repo
+      - https://copr.fedorainfracloud.org/coprs/bieszczaders/kernel-cachyos/repo/fedora-41/kernel-cachyos-fedora-41.repo
     remove:
       - kernel
       - kernel-core
@@ -52,4 +44,5 @@ modules:
     install:
       - kernel-cachyos
 
-  - type: signing # configura las políticas y ficheros de firma necesarios para imágenes firmadas
+  - type: signing
+
