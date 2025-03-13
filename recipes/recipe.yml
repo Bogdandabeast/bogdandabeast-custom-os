@@ -1,21 +1,21 @@
 ---
 # yaml-language-server: $schema=https://schema.blue-build.org/recipe-v1.json
-# image will be published to ghcr.io/<user>/<name>
+# la imagen se publicará en ghcr.io/<user>/<name>
 name: bogdandabeast-custom-os
-# description will be included in the image's metadata
-description: This is my personal OS image.
+# descripción que se incluirá en los metadatos de la imagen
+description: Mi sistema de trabajo
 
-# the base image to build on top of (FROM) and the version tag to use
-base-image: ghcr.io/ublue-os/silverblue-main
-image-version: 41 # latest is also supported if you want new updates ASAP
+# la base de la imagen sobre la que se construirá (FROM) y el tag de versión a usar
+base-image: ghcr.io/ublue-os/bluefin:latest
+image-version: latest # también se soporta "latest" para recibir actualizaciones constantes
 
-# module configuration, executed in order
-# you can include multiple instances of the same module
+# configuración de módulos, ejecutados en orden
+# puedes incluir múltiples instancias del mismo módulo
 modules:
   - type: files
     files:
       - source: system
-        destination: / # copies files/system/* (* means everything inside it) into your image's root folder /
+        destination: / # copia todo lo que esté en files/system/* en la raíz de la imagen
 
   - type: rpm-ostree
     repos:
@@ -24,21 +24,32 @@ modules:
       - micro
       - starship
     remove:
-      # example: removing firefox (in favor of the flatpak)
-      # "firefox" is the main package, "firefox-langpacks" is a dependency
+      # ejemplo: remover Firefox (se usará flatpak en su lugar)
       - firefox
-      - firefox-langpacks # also remove firefox dependency (not required for all packages, this is a special case)
+      - firefox-langpacks
 
   - type: default-flatpaks
-    notify: true # Send notification after install/uninstall is finished (true/false)
+    notify: true # Notifica cuando se finaliza la instalación o desinstalación (true/false)
     system:
-      # If no repo information is specified, Flathub will be used by default
+      # Si no se especifica información del repositorio, se usará Flathub por defecto
       install:
         - org.mozilla.firefox
         - org.gnome.Loupe
       remove:
         - org.gnome.eog
-    user: {} # Also add Flathub user repo, but no user packages
+    user: {} # Agrega también el repo de Flathub para usuario, aunque no instale nada a nivel usuario
 
-  - type: signing # this sets up the proper policy & signing files for signed images to work fully
+  # Módulo añadido para reemplazar el kernel por defecto por el kernel CachyOS
+  - type: rpm-ostree
+    repos:
+      - https://copr.fedorainfracloud.org/coprs/bieszczaders/kernel-cachyos/repo/fedora-%OS_VERSION%/kernel-cachyos-fedora-%OS_VERSION%.repo
+    remove:
+      - kernel
+      - kernel-core
+      - kernel-modules
+      - kernel-modules-core
+      - kernel-modules-extra
+    install:
+      - kernel-cachyos
 
+  - type: signing # configura las políticas y ficheros de firma necesarios para imágenes firmadas
